@@ -1,0 +1,29 @@
+# Version control
+.git
+.gitignore
+
+# IDE / editor
+.idea
+.vscode
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts (built inside Docker)
+_output
+web/dist
+web/node_modules
+node_modules
+
+# Local runtime artifacts
+*.db
+mgt.db
+
+# Documentation images not needed for build
+.screenshots
+.github
+
+# Logs
+*.log

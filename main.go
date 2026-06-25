@@ -1,16 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/Allenxuxu/mogutouERP/models"
 	"github.com/Allenxuxu/mogutouERP/pkg/token"
 	"github.com/gin-gonic/gin"
-	config "github.com/micro/go-micro/config"
-	"github.com/micro/go-micro/config/source/file"
 	"github.com/pkg/browser"
 )
 
@@ -19,31 +19,32 @@ func main() {
 	flag.Parse()
 
 	token.InitConfig(*path+"/jwt.json", "jwt-key")
-	//read config
-	fileSource := file.NewSource(
-		file.WithPath(*path + "/conf.json"),
-	)
-	conf := config.NewConfig()
-	err := conf.Load(fileSource)
+
+	// read config
+	confData, err := os.ReadFile(*path + "/conf.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var info models.DBInfo
-	err = conf.Get("mysql").Scan(&info)
-	if err != nil {
+	var confRoot struct {
+		Mysql models.DBInfo `json:"mysql"`
+	}
+	if err := json.Unmarshal(confData, &confRoot); err != nil {
 		log.Fatal(err)
 	}
-	models.Init(&info)
+
+	models.Init(&confRoot.Mysql)
 
 	gin.DisableConsoleColor()
-	// gin.SetMode(gin.ReleaseMode)
 	r := initRouter()
-	go func() {
-		time.Sleep(time.Second)
-		browser.OpenURL("http://127.0.0.1:1988/ui")
-		fmt.Println("Open: http://127.0.0.1:1988/ui")
-	}()
 
-	r.Run(":1988") // listen and serve on 0.0.0.0:8080
+	if os.Getenv("MOGUTOU_NO_BROWSER") == "" {
+		go func() {
+			time.Sleep(time.Second)
+			_ = browser.OpenURL("http://127.0.0.1:1988/ui")
+		}()
+	}
+	fmt.Println("Open: http://127.0.0.1:1988/ui")
+
+	r.Run(":1988") // listen and serve on 0.0.0.0:1988
 }

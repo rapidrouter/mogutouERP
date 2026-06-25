@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -25,9 +25,13 @@ func Init(info *DBInfo) {
 
 	switch os.Getenv("MOGUTOU_DB") {
 	case "mysql":
-		db, err = gorm.Open(mysql.Open(info.Name+":"+info.Password+"@tcp("+info.Addr+")/"+info.DBname+"?charset=utf8&parseTime=True&loc=Local"), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open(info.Name+":"+info.Password+"@tcp("+info.Addr+")/"+info.DBname+"?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
 	default:
-		db, err = gorm.Open(sqlite.Open("mgt.db"), &gorm.Config{})
+		sqlitePath := os.Getenv("MOGUTOU_SQLITE_PATH")
+		if sqlitePath == "" {
+			sqlitePath = "mgt.db"
+		}
+		db, err = gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
 	}
 
 	if err != nil {
